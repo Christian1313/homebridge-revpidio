@@ -14,7 +14,7 @@ You can skip the first 2 steps, if homebridge is already running on your RevPi c
 
 ### Prepare Revolution Pi
 
-Install at least a [jessi image](https://revolution.kunbus.com/tutorials/images/install-jessie/) on the Rev Pi core.
+Install at least a [jessie image](https://revolution.kunbus.com/tutorials/images/install-jessie/) on the Rev Pi core.
 
 Remove old node.js:
 

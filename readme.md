@@ -60,7 +60,7 @@ sudo apt-get install python3-revpimodio2
 sudo apt-get dist-upgrade
 ```
 
-Install this plugin using: `npm install -g homebridge-revpidio`
+Install this plugin using: `sudo npm install -g homebridge-revpidio`
 
 Create or Update your hombridge configuration file. See `sample_config.json` or snippet below.
 

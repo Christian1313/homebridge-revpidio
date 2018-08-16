@@ -1,6 +1,6 @@
 {
   "name": "homebridge-revpidio",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Homebridge plugin Revolution PI DIO modules",
   "main": "index.js",
   "scripts": {

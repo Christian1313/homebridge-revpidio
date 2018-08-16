@@ -14,8 +14,8 @@ var Service, Characteristic;
 
 const debugOut = 0;
 const spawn = require('child_process').spawn;
-const currentPath = process.cwd();
-const pyFileOutputs = currentPath + '/homebridge-revpidio/liveoutputs.py';
+const currentPath = __dirname;
+const pyFileOutputs = currentPath + '/liveoutputs.py';
 const py = spawn('python3', [pyFileOutputs, this.output_name]);
 
 var arrayCounter = 0;
@@ -104,7 +104,7 @@ RevPiDO.prototype = {
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
       .setCharacteristic(Characteristic.Model, "Revolution Pi")
-      .setCharacteristic(Characteristic.FirmwareRevision, "0.1.0");
+      .setCharacteristic(Characteristic.FirmwareRevision, "0.1.1");
 
     var theService
     if (this.service_type == "fan") {

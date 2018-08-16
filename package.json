@@ -1,0 +1,28 @@
+{
+  "name": "homebridge-revpidio",
+  "version": "0.0.1",
+  "description": "Homebridge plugin Revolution PI DIO module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fredericbarthelet/homebridge-smappee.git"
+  },
+  "keywords": [
+    "homebrige",
+    "revolutionpi",
+    "homebridge-plugin"
+  ],
+  "engines": {
+    "node": ">=0.12.0",
+    "homebridge": ">=0.2.0"
+  },
+  "author": "Christian Zimmermann",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fredericbarthelet/homebridge-smappee/issues"
+  },
+  "homepage": "https://github.com/fredericbarthelet/homebridge-smappee#readme"
+}

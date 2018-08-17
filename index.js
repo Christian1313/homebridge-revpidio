@@ -1,3 +1,5 @@
+
+var os = require("os");
 var Service, Characteristic;
 
 // "accessories": [
@@ -125,10 +127,13 @@ RevPiDI.prototype = {
 
   getServices: function() {
     this.log("GetServices of " + this.port_name);
+    var hostname = os.hostname();
+
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
-      .setCharacteristic(Characteristic.Model, "Revolution Pi")
+      .setCharacteristic(Characteristic.Model, "RevPi Digital Input")
+      .setCharacteristic(Characteristic.SerialNumber, hostname)
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
 
     this.informationService = informationService;
@@ -225,10 +230,12 @@ RevPiDO.prototype = {
 
   getServices: function() {
     this.log("GetServices of " + this.port_name);
+    var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
-      .setCharacteristic(Characteristic.Model, "Revolution Pi")
+      .setCharacteristic(Characteristic.Model, "RevPi Digital Output")
+      .setCharacteristic(Characteristic.SerialNumber, hostname)
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
 
     this.informationService = informationService;
@@ -282,10 +289,12 @@ RevPiCore.prototype = {
   },
 
   getServices: function() {
+    var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
       .setCharacteristic(Characteristic.Model, "RevPi Core")
+      .setCharacteristic(Characteristic.SerialNumber, hostname)
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
 
     this.tempService = new Service.TemperatureSensor(this.name);

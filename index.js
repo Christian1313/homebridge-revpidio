@@ -12,7 +12,7 @@ var Service, Characteristic;
 // type is optional (default: "switch")
 // ["switch", "light", "fan"]
 
-const debugOut = 0;
+const debugOut = 4;
 const spawn = require('child_process').spawn;
 const currentPath = __dirname;
 const pyFileOutputs = currentPath + '/liveoutputs.py';
@@ -28,6 +28,9 @@ var core_temp = 13.3;
 py.stdout.on('data', function(data) {
   var retStr = data.toString().trim();
   retStr = data.toString().replace(/\r?\n|\r/g, "#");
+  if (debugOut > 3) {
+    console.log(retStr);
+  }
   var compos = retStr.split("#");
   if (compos.length > 1) {
     for (var i = 0; i < compos.length / 2; i++) {
@@ -38,9 +41,11 @@ py.stdout.on('data', function(data) {
       if (name == "TEMP") {
         core_temp = parseFloat(stat)
         if (hasCoreModule) {
-          if (debugOut > 2) { coreModule.log("update temp " + core_temp); }
+          if (debugOut > 2) {
+            coreModule.log("update temp " + core_temp);
+          }
           coreModule.tempService
-              .getCharacteristic(Characteristic.CurrentTemperature).updateValue(core_temp, null);
+            .getCharacteristic(Characteristic.CurrentTemperature).updateValue(core_temp, null);
         }
       } else {
 
@@ -59,12 +64,14 @@ py.stdout.on('data', function(data) {
               }
               newState = false;
             }
-
+            module.state = newState;
             if (module.hasCallback) {
               var callback = module.returnCallBack;
               module.returnCallBack = null;
               module.hasCallback = false;
               callback(null, newState);
+            } else { // no call back
+              module.service.getCharacteristic(module.updateCharacteristic).updateValue(newState, null);
             }
             break;
           }
@@ -78,14 +85,65 @@ module.exports = function(homebridge) {
   Service = homebridge.hap.Service;
   Characteristic = homebridge.hap.Characteristic;
   homebridge.registerAccessory("homebridge-revpidio", "RevPiDO", RevPiDO);
+  homebridge.registerAccessory("homebridge-revpidio", "RevPiDI", RevPiDI);
   homebridge.registerAccessory("homebridge-revpidio", "RevPiCore", RevPiCore);
 };
+
+
+function RevPiDI(log, config) {
+  log("Init RevPiDI [" + arrayCounter + "]");
+  this.log = log;
+  this.name = config["name"];
+  this.output_name = config["input_name"];
+  this.state = false;
+  this.arrayIndex = arrayCounter;
+  this.hasCallback = false;
+  this.returnCallback = null;
+  arrayModules.push(this);
+  arrayCounter += 1;
+}
+
+RevPiDI.prototype = {
+
+  getState: function(next) {
+    if (debugOut > 2) {
+      this.log(this.output_name + " GET_STATE?");
+    }
+    this.hasCallback = true;
+    this.returnCallBack = next;
+    py.stdin.write(this.output_name + "#GET\n");
+  },
+
+  getServices: function() {
+    this.log("GetServices of " + this.output_name);
+    var informationService = new Service.AccessoryInformation();
+    informationService
+      .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
+      .setCharacteristic(Characteristic.Model, "Revolution Pi")
+      .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+
+    var theService
+    // motion sensor
+
+    theService = new Service.MotionSensor(this.name);
+
+    theService.getCharacteristic(Characteristic.MotionDetected)
+      .on('get', this.getState.bind(this));
+
+    this.informationService = informationService;
+    this.service = theService;
+    this.updateCharacteristic = Characteristic.MotionDetected;
+    return [informationService, theService];
+  }
+};
+
 
 function RevPiDO(log, config) {
   log("Init RevPiDO [" + arrayCounter + "]");
   this.log = log;
   this.name = config["name"];
   this.output_name = config["output_name"];
+  this.state = false;
   this.service_type = config["type"];
   if (!this.service_type) {
     this.service_type = "switch"
@@ -145,7 +203,8 @@ RevPiDO.prototype = {
       .on('set', this.setPowerState.bind(this));
 
     this.informationService = informationService;
-    this.onService = theService;
+    this.service = theService;
+    this.updateCharacteristic = Characteristic.On;
     return [informationService, theService];
   }
 };
@@ -162,13 +221,17 @@ function RevPiCore(log, config) {
 RevPiCore.prototype = {
 
   reqTemp: function() {
-     if (debugOut > 2) { this.log("UPDATE_CORE_TEMP?"); }
-      py.stdin.write("CORE#TEMP\n");
-      setTimeout(this.reqTemp.bind(this), 10000);
+    if (debugOut > 2) {
+      this.log("UPDATE_CORE_TEMP?");
+    }
+    py.stdin.write("CORE#TEMP\n");
+    setTimeout(this.reqTemp.bind(this), 10000);
   },
 
   getTemp: function(callback) {
-    if (debugOut > 1) { this.log("GET_CORE_TEMP?"); }
+    if (debugOut > 1) {
+      this.log("GET_CORE_TEMP?");
+    }
     this.reqTemp();
     callback(null, core_temp)
     return core_temp;

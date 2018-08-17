@@ -1,9 +1,9 @@
 {
 	"bridge": {
 		"name": "RevPiHomebridge",
-		"username": "AA:22:3D:E3:CB:13",
+		"username": "AA:22:3D:E3:CB:14",
 		"port": 51826,
-		"pin": "031-13-137"
+		"pin": "031-13-138"
 	},
 	"description": "This the RevPi HomeBridge",
 	"accessories": [{
@@ -32,7 +32,7 @@
 	{
 		"accessory": "RevPiDI",
 		"name": "An input",
-		"output_name": "I_1",
+		"input_name": "I_1",
 		"type": "motion"
 	},
 	{

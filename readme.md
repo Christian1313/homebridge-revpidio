@@ -25,7 +25,7 @@ apt-get remove nodejs nodejs-legacy -y
 exit
 ```
 
-Install node.js version manager. 
+Install node.js version manager.
 This will install node.js and npm.
 
 ```
@@ -69,7 +69,7 @@ Create or Update your hombridge configuration file. See `sample_config.json` or 
 Configuration sample:
 
 ```
-accessories : [ 
+accessories : [
   {
     "accessory": "RevPiDO",
 	"name": "A Light",
@@ -84,8 +84,30 @@ Fields:
 - "accessory": Must always be "RevPiDO" (required)
 - "name": Can be anything (required)
 - "output\_name": type name of the digital output given in PiCtory (e.g. "O_1" for output 1). (required)
-- "type" : one of the folloing option ["switch", "light", "fan"] default: "switch"
+- "type" : one of the following option ["switch", "light", "fan"] default: "switch"
 
+
+## Configuration Digital Inputs
+
+Configuration sample:
+
+```
+accessories : [
+  {
+    "accessory": "RevPiDI",
+	"name": "An Input",
+	"input_name": "I_3",
+  "type" : "motion"
+  }
+]
+```
+
+Fields:
+
+- "accessory": Must always be "RevPiDI" (required)
+- "name": Can be anything (required)
+- "input\_name": type name of the digital input given in PiCtory (e.g. "I_1" for input 1). (required)
+- "type" : one of the following option ["motion"] default: "motion"
 
 ## Configuration PiCore Info
 
@@ -94,7 +116,7 @@ To show the RevPi core temperatur use this accessory.
 Configuration sample:
 
 ```
-accessories : [ 
+accessories : [
     {
 		"accessory": "RevPiCore",
 		"name": "My RevPi core"

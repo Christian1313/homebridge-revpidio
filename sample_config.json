@@ -28,6 +28,16 @@
 		"name": "A Fan",
 		"output_name": "O_4",
 		"type": "fan"
+	},
+	{
+		"accessory": "RevPiDI",
+		"name": "An input",
+		"output_name": "I_1",
+		"type": "motion"
+	},
+	{
+		"accessory": "RevPiCore",
+		"name": "My RevPi core"
 	}
 	],
 	"platforms": []

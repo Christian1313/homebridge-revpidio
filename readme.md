@@ -45,7 +45,7 @@ sudo npm install -g --unsafe-perm homebridge
 ```
 
 
-run hombrifge using `homebridge` to check if it is  correctly installed. The message "No plugins found. See the README for information on installing plugins." should appear.
+run homebridge using `homebridge` to check if it is  correctly installed. The message "No plugins found. See the README for information on installing plugins." should appear.
 
 
 ###  Install & Setup RevPiDO plugin
@@ -62,9 +62,9 @@ sudo apt-get dist-upgrade
 
 Install this plugin using: `npm install -g homebridge-revpidio`
 
-Create or Update your hombridge configuration file. See `sample_config.json` or snippet below.
+Create or Update your hombridge configuration file. See `sample_config.json` or snippets below.
 
-## Configuration
+## Configuration Digital Ouptuts
 
 Configuration sample:
 
@@ -85,3 +85,24 @@ Fields:
 - "name": Can be anything (required)
 - "output\_name": type name of the digital output given in PiCtory (e.g. "O_1" for output 1). (required)
 - "type" : one of the folloing option ["switch", "light", "fan"] default: "switch"
+
+
+## Configuration PiCore Info
+
+To show the RevPi core temperatur use this accessory.
+
+Configuration sample:
+
+```
+accessories : [ 
+    {
+		"accessory": "RevPiCore",
+		"name": "My RevPi core"
+	}
+]
+```
+
+Fields:
+
+- "accessory": Must always be "RevPiCore" (required)
+- "name": Can be anything (required)

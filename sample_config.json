@@ -28,6 +28,10 @@
 		"name": "A Fan",
 		"output_name": "O_4",
 		"type": "fan"
+	},
+	{
+		"accessory": "RevPiCore",
+		"name": "My RevPi core"
 	}
 	],
 	"platforms": []

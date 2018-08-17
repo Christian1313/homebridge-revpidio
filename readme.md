@@ -1,7 +1,9 @@
 Homebridge plugin for Revolution PIs [digital I/O modules](https://revolution.kunbus.com/io-modules/)
 
-Currently, this plugin switches digital outputs of the RevPi DIO & RevPi DO.
-It uses the type names of the digital outputs as setup in PiCtory.
+This plugin provides HomeKit switches for the digital outputs of the RevPi DIO & RevPi DO.
+Additional the digital inputs can be configured as some type of sensor inpur.
+
+Both digital outputs and inputs uses the type names of the digital outputs as setup in PiCtory.
 
 
 ## Installation
@@ -97,7 +99,7 @@ accessories : [
     "accessory": "RevPiDI",
 	"name": "An Input",
 	"input_name": "I_3",
-  "type" : "motion"
+    "type" : "motion"
   }
 ]
 ```
@@ -107,7 +109,7 @@ Fields:
 - "accessory": Must always be "RevPiDI" (required)
 - "name": Can be anything (required)
 - "input\_name": type name of the digital input given in PiCtory (e.g. "I_1" for input 1). (required)
-- "type" : one of the following option ["motion"] default: "motion"
+- "type" : one of the following option ["contact", "motion", "smoke", "leak", "occupancy"] default: "contact"
 
 ## Configuration PiCore Info
 

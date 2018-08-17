@@ -12,7 +12,7 @@ var Service, Characteristic;
 // type is optional (default: "switch")
 // ["switch", "light", "fan"]
 
-const debugOut = 2;
+const debugOut = 0;
 const spawn = require('child_process').spawn;
 const currentPath = __dirname;
 const pyFileOutputs = currentPath + '/liveoutputs.py';
@@ -51,20 +51,28 @@ py.stdout.on('data', function(data) {
         for (var idx in arrayModules) {
           var module = arrayModules[idx];
           if (module.port_name == name) {
-            var newState = false;
+            var newState = 0;
             if (stat == "ON") {
               if (debugOut > 1) {
                 module.log(module.port_name + ' == ON');
               }
-              newState = true;
+              newState = 1;
             } else if (stat == "OFF") {
               if (debugOut > 1) {
                 module.log(module.port_name + ' == OFF');
               }
-              newState = false;
+              newState = 0;
+            }
+
+            if (module.invert) {
+               newState = newState == 0 ? 1 : 0;
             }
             module.state = newState;
-            module.service.getCharacteristic(module.updateCharacteristic).updateValue(newState, null);
+            var sendState = module.state;
+            if (module.stateIsBool) {
+               sendState = module.state == 0 ? false : true;
+            }
+            module.service.getCharacteristic(module.updateCharacteristic).updateValue(sendState, null);
             break;
           }
         }
@@ -87,10 +95,17 @@ function RevPiDI(log, config) {
   this.log = log;
   this.name = config["name"];
   this.port_name = config["input_name"];
-  this.state = false;
+  this.invert = false;
+  this.state = 0;
+  this.stateIsBool = false;
+  this.service_type = config["type"];
+  if (!this.service_type) {
+    this.service_type = "contact"
+  }
   this.arrayIndex = arrayCounter;
   arrayModules.push(this);
   arrayCounter += 1;
+  py.stdin.write(this.port_name + "#GET\n");
 }
 
 RevPiDI.prototype = {
@@ -100,7 +115,12 @@ RevPiDI.prototype = {
       this.log(this.port_name + " GET_STATE?");
     }
     py.stdin.write(this.port_name + "#GET\n");
-    next(null, this.state)
+
+    var sendState =this.state;
+    if (this.stateIsBool) {
+       sendState = this.state == 0 ? false : true;
+    }
+    next(null, sendState)
   },
 
   getServices: function() {
@@ -114,14 +134,43 @@ RevPiDI.prototype = {
     this.informationService = informationService;
 
     var theService
+    if (this.service_type == "motion") {
+      // motion sensor
+      theService = new Service.MotionSensor(this.name);
+      theService.getCharacteristic(Characteristic.MotionDetected)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.MotionDetected;
+    } else if (this.service_type == "contact") {
+      theService = new Service.ContactSensor(this.name);
+      theService.getCharacteristic(Characteristic.ContactSensorState)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.ContactSensorState;
+    } else if (this.service_type == "leak") {
+      theService = new Service.LeakSensor(this.name);
+      theService.getCharacteristic(Characteristic.LeakDetected)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.LeakDetected;
+    } else if (this.service_type == "smoke") {
+      theService = new Service.SmokeSensor(this.name);
+      theService.getCharacteristic(Characteristic.SmokeDetected)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.SmokeDetected;
+    } else if (this.service_type == "occupancy") {
+      theService = new Service.OccupancySensor(this.name);
+      theService.getCharacteristic(Characteristic.OccupancyDetected)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.OccupancyDetected;
+    } else {
+      theService = new Service.ContactSensor(this.name);
+      theService.getCharacteristic(Characteristic.ContactSensorState)
+        .on('get', this.getState.bind(this));
+      this.updateCharacteristic = Characteristic.ContactSensorState;
+    }
 
-    // motion sensor
-    theService = new Service.MotionSensor(this.name);
-    theService.getCharacteristic(Characteristic.MotionDetected)
-      .on('get', this.getState.bind(this));
+
 
     this.service = theService;
-    this.updateCharacteristic = Characteristic.MotionDetected;
+
     return [informationService, theService];
   }
 };
@@ -132,7 +181,9 @@ function RevPiDO(log, config) {
   this.log = log;
   this.name = config["name"];
   this.port_name = config["output_name"];
-  this.state = false;
+  this.state = 0;
+  this.stateIsBool = true;
+  this.invert = false;
   this.service_type = config["type"];
   if (!this.service_type) {
     this.service_type = "switch"
@@ -140,6 +191,7 @@ function RevPiDO(log, config) {
   this.arrayIndex = arrayCounter;
   arrayModules.push(this);
   arrayCounter += 1;
+  py.stdin.write(this.port_name + "#GET\n");
 }
 
 RevPiDO.prototype = {
@@ -149,7 +201,11 @@ RevPiDO.prototype = {
       this.log(this.port_name + " GET_STATE?");
     }
     py.stdin.write(this.port_name + "#GET\n");
-    next(null, this.state)
+    var sendState = this.state;
+    if (this.stateIsBool) {
+       sendState = this.state == 0 ? false : true;
+    }
+    next(null, sendState)
   },
 
   setPowerState: function(powerOn, next) {
@@ -229,7 +285,7 @@ RevPiCore.prototype = {
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
-      .setCharacteristic(Characteristic.Model, "RevPi core")
+      .setCharacteristic(Characteristic.Model, "RevPi Core")
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
 
     this.tempService = new Service.TemperatureSensor(this.name);

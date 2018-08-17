@@ -12,7 +12,7 @@ var Service, Characteristic;
 // type is optional (default: "switch")
 // ["switch", "light", "fan"]
 
-const debugOut = 4;
+const debugOut = 2;
 const spawn = require('child_process').spawn;
 const currentPath = __dirname;
 const pyFileOutputs = currentPath + '/liveoutputs.py';
@@ -48,31 +48,23 @@ py.stdout.on('data', function(data) {
             .getCharacteristic(Characteristic.CurrentTemperature).updateValue(core_temp, null);
         }
       } else {
-
         for (var idx in arrayModules) {
           var module = arrayModules[idx];
-          if (module.output_name == name) {
+          if (module.port_name == name) {
             var newState = false;
             if (stat == "ON") {
               if (debugOut > 1) {
-                module.log(module.output_name + ' == ON');
+                module.log(module.port_name + ' == ON');
               }
               newState = true;
             } else if (stat == "OFF") {
               if (debugOut > 1) {
-                module.log(module.output_name + ' == OFF');
+                module.log(module.port_name + ' == OFF');
               }
               newState = false;
             }
             module.state = newState;
-            if (module.hasCallback) {
-              var callback = module.returnCallBack;
-              module.returnCallBack = null;
-              module.hasCallback = false;
-              callback(null, newState);
-            } else { // no call back
-              module.service.getCharacteristic(module.updateCharacteristic).updateValue(newState, null);
-            }
+            module.service.getCharacteristic(module.updateCharacteristic).updateValue(newState, null);
             break;
           }
         }
@@ -94,11 +86,9 @@ function RevPiDI(log, config) {
   log("Init RevPiDI [" + arrayCounter + "]");
   this.log = log;
   this.name = config["name"];
-  this.output_name = config["input_name"];
+  this.port_name = config["input_name"];
   this.state = false;
   this.arrayIndex = arrayCounter;
-  this.hasCallback = false;
-  this.returnCallback = null;
   arrayModules.push(this);
   arrayCounter += 1;
 }
@@ -107,30 +97,29 @@ RevPiDI.prototype = {
 
   getState: function(next) {
     if (debugOut > 2) {
-      this.log(this.output_name + " GET_STATE?");
+      this.log(this.port_name + " GET_STATE?");
     }
-    this.hasCallback = true;
-    this.returnCallBack = next;
-    py.stdin.write(this.output_name + "#GET\n");
+    py.stdin.write(this.port_name + "#GET\n");
+    next(null, this.state)
   },
 
   getServices: function() {
-    this.log("GetServices of " + this.output_name);
+    this.log("GetServices of " + this.port_name);
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
       .setCharacteristic(Characteristic.Model, "Revolution Pi")
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
 
+    this.informationService = informationService;
+
     var theService
+
     // motion sensor
-
     theService = new Service.MotionSensor(this.name);
-
     theService.getCharacteristic(Characteristic.MotionDetected)
       .on('get', this.getState.bind(this));
 
-    this.informationService = informationService;
     this.service = theService;
     this.updateCharacteristic = Characteristic.MotionDetected;
     return [informationService, theService];
@@ -142,15 +131,13 @@ function RevPiDO(log, config) {
   log("Init RevPiDO [" + arrayCounter + "]");
   this.log = log;
   this.name = config["name"];
-  this.output_name = config["output_name"];
+  this.port_name = config["output_name"];
   this.state = false;
   this.service_type = config["type"];
   if (!this.service_type) {
     this.service_type = "switch"
   }
   this.arrayIndex = arrayCounter;
-  this.hasCallback = false;
-  this.returnCallback = null;
   arrayModules.push(this);
   arrayCounter += 1;
 }
@@ -159,35 +146,36 @@ RevPiDO.prototype = {
 
   getPowerState: function(next) {
     if (debugOut > 2) {
-      this.log(this.output_name + " GET_STATE?");
+      this.log(this.port_name + " GET_STATE?");
     }
-    this.hasCallback = true;
-    this.returnCallBack = next;
-    py.stdin.write(this.output_name + "#GET\n");
+    py.stdin.write(this.port_name + "#GET\n");
+    next(null, this.state)
   },
 
   setPowerState: function(powerOn, next) {
     if (powerOn) {
       if (debugOut > 0) {
-        this.log("SET_STATE " + this.output_name + " => ON");
+        this.log("SET_STATE " + this.port_name + " => ON");
       }
-      py.stdin.write(this.output_name + "#ON\n");
+      py.stdin.write(this.port_name + "#ON\n");
     } else {
       if (debugOut > 0) {
-        this.log("SET_STATE " + this.output_name + " => OFF");
+        this.log("SET_STATE " + this.port_name + " => OFF");
       }
-      py.stdin.write(this.output_name + "#OFF\n");
+      py.stdin.write(this.port_name + "#OFF\n");
     }
     next(null);
   },
 
   getServices: function() {
-    this.log("GetServices of " + this.output_name);
+    this.log("GetServices of " + this.port_name);
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
       .setCharacteristic(Characteristic.Model, "Revolution Pi")
       .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+
+    this.informationService = informationService;
 
     var theService
     if (this.service_type == "fan") {
@@ -202,7 +190,7 @@ RevPiDO.prototype = {
       .on('get', this.getPowerState.bind(this))
       .on('set', this.setPowerState.bind(this));
 
-    this.informationService = informationService;
+
     this.service = theService;
     this.updateCharacteristic = Characteristic.On;
     return [informationService, theService];

@@ -138,4 +138,4 @@ Fields:
 
 Special thanks for contributions:
 
-- Sven @ https://revpimodio.org/ (python library + bug repport)
+- Sven @ https://revpimodio.org/ (python library + bug report)

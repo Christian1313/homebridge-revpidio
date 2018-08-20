@@ -130,3 +130,12 @@ Fields:
 
 - "accessory": Must always be "RevPiCore" (required)
 - "name": Can be anything (required)
+
+
+
+
+# Contributions & Thanks
+
+Special thanks for contributions:
+
+- Sven @ https://revpimodio.org/ (python library + bug repport)

@@ -2,6 +2,9 @@
 var os = require("os");
 var Service, Characteristic;
 
+const version = "0.2.1";
+const manufac = "KUNBUS";
+
 // "accessories": [
 //   {
 //     "accessory": "HomebridgeRevPiDIO",
@@ -131,10 +134,10 @@ RevPiDI.prototype = {
 
     var informationService = new Service.AccessoryInformation();
     informationService
-      .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
+      .setCharacteristic(Characteristic.Manufacturer, manufac)
       .setCharacteristic(Characteristic.Model, "RevPi Digital Input")
       .setCharacteristic(Characteristic.SerialNumber, hostname)
-      .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+      .setCharacteristic(Characteristic.FirmwareRevision, version);
 
     this.informationService = informationService;
 
@@ -233,10 +236,10 @@ RevPiDO.prototype = {
     var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
-      .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
+      .setCharacteristic(Characteristic.Manufacturer, manufac)
       .setCharacteristic(Characteristic.Model, "RevPi Digital Output")
       .setCharacteristic(Characteristic.SerialNumber, hostname)
-      .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+      .setCharacteristic(Characteristic.FirmwareRevision, version);
 
     this.informationService = informationService;
 
@@ -292,10 +295,10 @@ RevPiCore.prototype = {
     var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
-      .setCharacteristic(Characteristic.Manufacturer, "KUNBUS")
+      .setCharacteristic(Characteristic.Manufacturer, manufac)
       .setCharacteristic(Characteristic.Model, "RevPi Core")
       .setCharacteristic(Characteristic.SerialNumber, hostname)
-      .setCharacteristic(Characteristic.FirmwareRevision, "0.2.0");
+      .setCharacteristic(Characteristic.FirmwareRevision, version);
 
     this.tempService = new Service.TemperatureSensor(this.name);
     this.tempService

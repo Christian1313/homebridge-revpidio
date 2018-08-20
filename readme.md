@@ -74,9 +74,9 @@ Configuration sample:
 accessories : [
   {
     "accessory": "RevPiDO",
-	  "name": "A Light",
-	  "output_name": "O_3",
-	  "type": "light",
+    "name": "A Light",
+    "output_name": "O_3",
+    "type": "light",
     "invert": false
   }
 ]
@@ -99,8 +99,8 @@ Configuration sample:
 accessories : [
   {
     "accessory": "RevPiDI",
-	  "name": "An Input",
-	  "input_name": "I_3",
+    "name": "An Input",
+    "input_name": "I_3",
     "type" : "motion",
     "invert": false
   }
@@ -129,10 +129,10 @@ Configuration sample:
 
 ```
 accessories : [
-    {
-		"accessory": "RevPiCore",
-		"name": "My RevPi core"
-	}
+  {
+    "accessory": "RevPiCore",
+    "name": "My RevPi core"
+  }
 ]
 ```
 

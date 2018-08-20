@@ -12,7 +12,7 @@ reques_time = 0
 action_time = 0
 
 
-def myfunc(the_revpi):
+def handleStatusLEDs(the_revpi):
     global active_time
     global action_time
     global activ_state
@@ -20,7 +20,6 @@ def myfunc(the_revpi):
     while True:
         time.sleep(0.1)
         now = time.monotonic()
-
         override_a1 = False
 
         if reques_time > 0.0:
@@ -52,8 +51,15 @@ class RevPiModDO():
         self.revpi.core.A1 = revpimodio2.GREEN
         # Handle SIGINT / SIGTERM to exit program cleanly
         self.revpi.handlesignalend(self.cleanup_revpi)
-        # Register event to toggle output O_1 with input I_1
-        self.revpi.io.I_1.reg_event(self.event_input_changed, edge=revpimodio2.BOTH)
+        # Register events to all Inputs
+
+        #self.revpi.io.I_1.reg_event(self.event_input_changed, edge=revpimodio2.BOTH)
+
+        for device in self.revpi.device:
+            # Use only DIO, DI, DO, AIO Devices
+            if device.type == "LEFT_RIGHT":
+                for io in device.get_inputs():
+                    io.reg_event(self.event_input_changed)
 
 
     def cleanup_revpi(self):
@@ -90,7 +96,6 @@ class RevPiModDO():
         action_time = time.monotonic()
         self.revpi.core.A2 = revpimodio2.GREEN
         self.revpi.io[output_name].value = value
-        #self.revpi.writeprocimg()
 
 
     def setOn(self, output_name):
@@ -111,16 +116,13 @@ class RevPiModDO():
         sys.stdout.flush()
 
 
-
-
-
     def start(self):
 
         self.revpi.mainloop(blocking=False)
-        t = threading.Thread(target=myfunc, args=(self.revpi,))
+        t = threading.Thread(target=handleStatusLEDs, args=(self.revpi,))
         t.start()
-        while True:
-            time.sleep(0.1)
+
+        while not self.revpi.exitsignal.wait(0.1):
             for line in sys.stdin:
                 ltxt = line.strip()
                 cmds = ltxt.split("#")

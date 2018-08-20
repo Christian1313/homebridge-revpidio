@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Christian1313/homebridge-revpido.git"
+    "url": "git+https://github.com/Christian1313/homebridge-revpidio.git"
   },
   "keywords": [
     "homebrige",
@@ -22,7 +22,7 @@
   "author": "Christian Zimmermann",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Christian1313/homebridge-revpido/issues"
+    "url": "https://github.com/Christian1313/homebridge-revpidio/issues"
   },
-  "homepage": "https://github.com/Christian1313/homebridge-revpido#readme"
+  "homepage": "https://github.com/Christian1313/homebridge-revpidio#readme"
 }

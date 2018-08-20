@@ -36,6 +36,19 @@
 		"type": "motion"
 	},
 	{
+		"accessory": "RevPiDI",
+		"name": "An input",
+		"input_name": "I_2",
+		"type": "contact",
+		"invert" : true
+	},
+	{
+		"accessory": "RevPiDI",
+		"name": "An input",
+		"input_name": "I_2",
+		"type": "button"
+	},
+	{
 		"accessory": "RevPiCore",
 		"name": "My RevPi core"
 	}

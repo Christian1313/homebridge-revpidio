@@ -1,8 +1,7 @@
-
 var os = require("os");
 var Service, Characteristic;
 
-const version = "0.2.1";
+const version = "0.3.0";
 const manufac = "KUNBUS";
 
 // "accessories": [
@@ -58,26 +57,49 @@ py.stdout.on('data', function(data) {
           if (module.port_name == name) {
             var newState = 0;
             if (stat == "ON") {
-              if (debugOut > 1) {
-                module.log(module.port_name + ' == ON');
+              if (debugOut > 2) {
+                module.log(module.port_name + ' == on');
               }
               newState = 1;
             } else if (stat == "OFF") {
-              if (debugOut > 1) {
-                module.log(module.port_name + ' == OFF');
+              if (debugOut > 2) {
+                module.log(module.port_name + ' == off');
               }
               newState = 0;
             }
 
             if (module.invert) {
-               newState = newState == 0 ? 1 : 0;
+              if (debugOut > 2) {
+                console.log("is inverted");
+              }
+              newState = newState == 0 ? 1 : 0;
             }
             module.state = newState;
+
+
+            if (newState == 1) {
+              if (debugOut > 1) {
+                module.log(module.port_name + ' == ON');
+              }
+            } else if (newState == 0) {
+              if (debugOut > 1) {
+                module.log(module.port_name + ' == OFF');
+              }
+            }
+
+            // handling stateless switches (digital inputs)
+
             var sendState = module.state;
             if (module.stateIsBool) {
-               sendState = module.state == 0 ? false : true;
+              sendState = module.state == 0 ? false : true;
             }
-            module.service.getCharacteristic(module.updateCharacteristic).updateValue(sendState, null);
+            if (module.service_type == "button") {
+              sendState = 0;
+            }
+
+            if ((module.service_type == "button" && (newState == 1)) || module.service_type != "button") {
+              module.service.getCharacteristic(module.updateCharacteristic).updateValue(sendState, null);
+            }
             break;
           }
         }
@@ -96,11 +118,13 @@ module.exports = function(homebridge) {
 
 
 function RevPiDI(log, config) {
-  log("Init RevPiDI [" + arrayCounter + "]");
   this.log = log;
   this.name = config["name"];
   this.port_name = config["input_name"];
-  this.invert = false;
+  this.invert = config["invert"];
+  if (!this.invert) {
+    this.invert = false;
+  }
   this.state = 0;
   this.stateIsBool = false;
   this.service_type = config["type"];
@@ -115,23 +139,40 @@ function RevPiDI(log, config) {
 
 RevPiDI.prototype = {
 
+  reqState: function() {
+    if (debugOut > 2) {
+      this.log(this.port_name + " GET_STATE?");
+    }
+    py.stdin.write(this.port_name + "#GET\n");
+  },
+
   getState: function(next) {
     if (debugOut > 2) {
       this.log(this.port_name + " GET_STATE?");
     }
     py.stdin.write(this.port_name + "#GET\n");
 
-    var sendState =this.state;
+    var sendState = this.state;
     if (this.stateIsBool) {
-       sendState = this.state == 0 ? false : true;
+      sendState = this.state == 0 ? false : true;
     }
     next(null, sendState)
   },
 
-  getServices: function() {
-    this.log("GetServices of " + this.port_name);
-    var hostname = os.hostname();
+  setState: function(powerOn, next) {
+    var sendState = powerOn == true ? false : true;
+    if (debugOut > 2) {
+      this.log(this.port_name + " SET_STATE NOT SUPPORTED (stays " + this.state + ")  " + sendState);
+    }
+    setTimeout(this.reqState.bind(this), 333);
+    next(null, this.state)
+  },
 
+  getServices: function() {
+    if (debugOut > 0) {
+      this.log("GetServices of " + this.port_name);
+    }
+    var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
       .setCharacteristic(Characteristic.Manufacturer, manufac)
@@ -168,6 +209,26 @@ RevPiDI.prototype = {
       theService.getCharacteristic(Characteristic.OccupancyDetected)
         .on('get', this.getState.bind(this));
       this.updateCharacteristic = Characteristic.OccupancyDetected;
+    } else if (this.service_type == "button") {
+      theService = new Service.StatelessProgrammableSwitch(this.name);
+      theService.getCharacteristic(Characteristic.ProgrammableSwitchEvent)
+        .setProps({
+          maxValue: 0
+        });
+      this.updateCharacteristic = Characteristic.ProgrammableSwitchEvent;
+    } else if (this.service_type == "state") {
+      theService = new Service.Switch(this.name);
+      theService.getCharacteristic(Characteristic.On)
+        .on('get', this.getState.bind(this))
+        .on('set', this.setState.bind(this));
+      this.updateCharacteristic = Characteristic.On;
+    } else if (this.service_type == "doorbell") {
+      theService = new Service.Doorbell(this.name);
+      theService.getCharacteristic(Characteristic.ProgrammableSwitchEvent)
+        .setProps({
+          maxValue: 0
+        });
+      this.updateCharacteristic = Characteristic.ProgrammableSwitchEvent;
     } else {
       theService = new Service.ContactSensor(this.name);
       theService.getCharacteristic(Characteristic.ContactSensorState)
@@ -175,23 +236,22 @@ RevPiDI.prototype = {
       this.updateCharacteristic = Characteristic.ContactSensorState;
     }
 
-
-
     this.service = theService;
-
     return [informationService, theService];
   }
 };
 
 
 function RevPiDO(log, config) {
-  log("Init RevPiDO [" + arrayCounter + "]");
   this.log = log;
   this.name = config["name"];
   this.port_name = config["output_name"];
   this.state = 0;
   this.stateIsBool = true;
-  this.invert = false;
+  this.invert = config["invert"];
+  if (!this.invert) {
+    this.invert = false;
+  }
   this.service_type = config["type"];
   if (!this.service_type) {
     this.service_type = "switch"
@@ -211,12 +271,20 @@ RevPiDO.prototype = {
     py.stdin.write(this.port_name + "#GET\n");
     var sendState = this.state;
     if (this.stateIsBool) {
-       sendState = this.state == 0 ? false : true;
+      sendState = this.state == 0 ? false : true;
+    }
+    if (debugOut > 3) {
+      this.log("GET_STATE is " + sendState);
     }
     next(null, sendState)
   },
 
   setPowerState: function(powerOn, next) {
+
+    if (this.invert) {
+      powerOn = powerOn == true ? false : true;
+    }
+
     if (powerOn) {
       if (debugOut > 0) {
         this.log("SET_STATE " + this.port_name + " => ON");
@@ -232,7 +300,9 @@ RevPiDO.prototype = {
   },
 
   getServices: function() {
-    this.log("GetServices of " + this.port_name);
+    if (debugOut > 0) {
+      this.log("GetServices of " + this.port_name);
+    }
     var hostname = os.hostname();
     var informationService = new Service.AccessoryInformation();
     informationService
@@ -265,7 +335,6 @@ RevPiDO.prototype = {
 
 
 function RevPiCore(log, config) {
-  log("Init RevPiCore");
   this.log = log;
   this.name = config["name"];
   coreModule = this;

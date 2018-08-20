@@ -11,12 +11,14 @@ activ_state = True
 reques_time = 0
 action_time = 0
 
+stopThread = False
 
 def handleStatusLEDs(the_revpi):
     global active_time
     global action_time
     global activ_state
     global reques_time
+    global stopThread
     while True:
         time.sleep(0.1)
         now = time.monotonic()
@@ -43,10 +45,16 @@ def handleStatusLEDs(the_revpi):
             the_revpi.core.A2 = revpimodio2.OFF
             action_time = 0
 
+        if stopThread:
+            break;
+    the_revpi.core.a1green.value = False
+
+
 
 class RevPiModDO():
 
     def __init__(self):
+        self.ledThred = None
         self.revpi = revpimodio2.RevPiModIO(autorefresh=True)
         self.revpi.core.A1 = revpimodio2.GREEN
         # Handle SIGINT / SIGTERM to exit program cleanly
@@ -63,8 +71,12 @@ class RevPiModDO():
 
 
     def cleanup_revpi(self):
+        global stopThread
+
+        stopThread = True
         # Switch of LED and outputs before exit program
         self.revpi.core.a1green.value = False
+
 
 
     def event_input_changed(self, ioname, iovalue):
@@ -119,8 +131,8 @@ class RevPiModDO():
     def start(self):
 
         self.revpi.mainloop(blocking=False)
-        t = threading.Thread(target=handleStatusLEDs, args=(self.revpi,))
-        t.start()
+        self.ledThred = threading.Thread(target=handleStatusLEDs, args=(self.revpi,))
+        self.ledThred.start()
 
         while not self.revpi.exitsignal.wait(0.1):
             for line in sys.stdin:

@@ -74,9 +74,10 @@ Configuration sample:
 accessories : [
   {
     "accessory": "RevPiDO",
-	"name": "A Light",
-	"output_name": "O_3",
-	"type": "light"
+	  "name": "A Light",
+	  "output_name": "O_3",
+	  "type": "light",
+    "invert": false
   }
 ]
 ```
@@ -87,6 +88,7 @@ Fields:
 - "name": Can be anything (required)
 - "output\_name": type name of the digital output given in PiCtory (e.g. "O_1" for output 1). (required)
 - "type" : one of the following option ["switch", "light", "fan"] default: "switch"
+- "invert": `true` or `false`, output is logical inverted, optional default: `false`
 
 
 ## Configuration Digital Inputs
@@ -97,9 +99,10 @@ Configuration sample:
 accessories : [
   {
     "accessory": "RevPiDI",
-	"name": "An Input",
-	"input_name": "I_3",
-    "type" : "motion"
+	  "name": "An Input",
+	  "input_name": "I_3",
+    "type" : "motion",
+    "invert": false
   }
 ]
 ```
@@ -109,7 +112,14 @@ Fields:
 - "accessory": Must always be "RevPiDI" (required)
 - "name": Can be anything (required)
 - "input\_name": type name of the digital input given in PiCtory (e.g. "I_1" for input 1). (required)
-- "type" : one of the following option ["contact", "motion", "smoke", "leak", "occupancy"] default: "contact"
+- "type" : one of the following option ["contact", "motion", "smoke", "leak", "occupancy", "button"\*, "state"\*\*, "doorbell"\*\*\*] default: "contact"
+- "invert": `true` or `false`, input is logical inverted, optional default: `false`
+
+\*: Button with no state, e.g. trigger for a scene
+
+\*\*: Like a switch, this switch can not switche manually
+
+\*\*\*: currently not supported in iOS (may be in the future, use motion)
 
 ## Configuration PiCore Info
 
@@ -134,7 +144,7 @@ Fields:
 
 
 
-# Contributions & Thanks
+## Contributions & Thanks
 
 Special thanks for contributions:
 
